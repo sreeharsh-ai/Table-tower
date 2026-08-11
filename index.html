@@ -35,6 +35,59 @@
   }
   #app{ position:fixed; inset:0; display:flex; flex-direction:column; }
 
+
+  /* ---------- LOCAL 2-PLAYER GAME FLOW ---------- */
+  #startscreen{
+    position:absolute; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(70% 70% at 50% 35%, rgba(45,31,12,.42), rgba(4,5,8,.94));
+    backdrop-filter:blur(5px);
+  }
+  #startscreen.hide{display:none;}
+  .start-card{
+    width:min(420px,calc(100vw - 32px)); padding:34px 30px; text-align:center;
+    background:rgba(20,22,29,.97); border:1px solid var(--brass-soft); border-radius:18px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6);
+  }
+  .start-badge{
+    display:inline-block; padding:5px 9px; border:1px solid var(--line); border-radius:999px;
+    color:var(--text-faint); font:600 10px 'IBM Plex Mono',monospace; letter-spacing:1.4px;
+  }
+  .start-card h2{margin:14px 0 7px;font:680 32px 'Fraunces',serif;color:var(--gold);}
+  .start-card p{margin:0 auto 22px;max-width:320px;color:var(--text-dim);font-size:13px;line-height:1.5;}
+  .game-btn{
+    border:1px solid var(--brass-soft); background:linear-gradient(180deg,#c99652,var(--brass));
+    color:#1a1408; border-radius:11px; padding:12px 22px; cursor:pointer;
+    font-weight:800; letter-spacing:.5px; font-size:13px; min-width:180px;
+  }
+  #turnbar{
+    position:absolute; top:16px; left:50%; transform:translateX(-50%); z-index:18;
+    display:none; align-items:center; gap:10px; padding:9px 12px 9px 15px;
+    border:1px solid var(--brass-soft); border-radius:12px;
+    background:rgba(20,22,29,.94); backdrop-filter:blur(7px); box-shadow:0 8px 28px rgba(0,0,0,.4);
+    white-space:nowrap;
+  }
+  #turnbar.show{display:flex;}
+  .turn-label{font-size:9px;color:var(--text-faint);letter-spacing:1.2px;font-weight:700;}
+  #turn-player{font-size:13px;color:var(--gold);font-weight:800;letter-spacing:.5px;}
+  #turn-timer{
+    min-width:58px;text-align:center;padding:4px 7px;border-radius:7px;background:#0d0f14;
+    color:var(--text);font:700 13px 'IBM Plex Mono',monospace;
+  }
+  #turn-timer.warning{color:var(--warn);}
+  #turn-timer.danger{color:var(--danger);animation:pulse .5s infinite;}
+  #forfeitbtn{
+    border:1px solid #6d3329;background:#241411;color:#f07a63;border-radius:8px;
+    padding:6px 9px;cursor:pointer;font-size:10px;font-weight:800;letter-spacing:.5px;
+  }
+  #players-list{display:flex;flex-direction:column;gap:7px;}
+  .player-row{display:flex;align-items:center;justify-content:space-between;padding:7px 8px;border:1px solid transparent;border-radius:8px;font-size:12px;}
+  .player-row.active{background:#211a10;border-color:var(--brass-soft);}
+  .player-row span{display:flex;align-items:center;gap:7px;}
+  .player-row i{display:block;width:8px;height:8px;border-radius:50%;background:var(--text-faint);}
+  .player-row.active i{background:var(--gold);box-shadow:0 0 7px var(--gold);}
+  .player-row b{font-size:9px;color:var(--text-faint);letter-spacing:.8px;}
+  .player-row.active b{color:var(--gold);}
+
   /* ---------- TOP BAR ---------- */
   #topbar{
     display:flex; align-items:center; justify-content:space-between;
@@ -250,6 +303,23 @@
     </div>
   </div>
 
+
+    <div id="startscreen">
+      <div class="start-card">
+        <div class="start-badge">LOCAL PASS &amp; PLAY</div>
+        <h2>TABLE TOWER</h2>
+        <p>Two players. One laptop. Take turns pulling one block at a time.</p>
+        <button class="game-btn" id="playbtn">▶ START GAME</button>
+      </div>
+    </div>
+
+    <div id="turnbar">
+      <span class="turn-label">NOW PLAYING</span>
+      <span id="turn-player">PLAYER 1</span>
+      <span id="turn-timer">15.0s</span>
+      <button id="forfeitbtn">LOSS</button>
+    </div>
+
   <div id="main">
     <aside class="panel" id="leftpanel">
       <div class="card">
@@ -298,6 +368,15 @@
         <div class="row"><span class="k">Time</span><span class="v" id="gi-time">00:00</span></div>
         <div class="row"><span class="k">Blocks</span><span class="v" id="gi-blocks">54/54</span></div>
         <div class="row"><span class="k">Status</span><span class="v" id="gi-status">READY</span></div>
+      </div>
+
+
+      <div class="card" id="players-card">
+        <h2>Players</h2>
+        <div id="players-list">
+          <div class="player-row active"><span><i></i> Player 1</span><b>TURN</b></div>
+          <div class="player-row"><span><i></i> Player 2</span><b>WAITING</b></div>
+        </div>
       </div>
 
       <div class="card">
@@ -805,6 +884,13 @@ class UIManager{
       mute: document.getElementById('mutebtn'),
       leftPanel: document.getElementById('leftpanel'),
       rightPanel: document.getElementById('rightpanel'),
+      startscreen: document.getElementById('startscreen'),
+      playbtn: document.getElementById('playbtn'),
+      turnbar: document.getElementById('turnbar'),
+      turnPlayer: document.getElementById('turn-player'),
+      turnTimer: document.getElementById('turn-timer'),
+      forfeit: document.getElementById('forfeitbtn'),
+      playersList: document.getElementById('players-list'),
     };
     this._buildGrid();
     this._bindStatic();
@@ -830,6 +916,8 @@ class UIManager{
       });
     });
     document.getElementById('resetbtn').addEventListener('click', ()=> this.cb.onReset());
+    this.el.playbtn.addEventListener('click', ()=> this.cb.onPlay());
+    this.el.forfeit.addEventListener('click', ()=> this.cb.onForfeit());
     document.getElementById('go-again').addEventListener('click', ()=> this.cb.onReset());
     document.getElementById('camresetbtn').addEventListener('click', ()=> this.cb.onCameraReset());
     this.el.mute.addEventListener('click', ()=>{
@@ -903,6 +991,29 @@ class UIManager{
     this.el.biState.textContent = block.removed ? 'Removed' : (block.extractionAmount() > 0.4 ? 'Extracting' : 'Stable');
   }
   hideBlockInfo(){ this.el.blockinfo.classList.remove('show'); }
+
+  showStart(show){
+    this.el.startscreen.classList.toggle('hide', !show);
+  }
+
+  showTurn(playerName, remaining){
+    this.el.turnbar.classList.add('show');
+    this.el.turnPlayer.textContent = playerName;
+    this.el.turnTimer.textContent = `${remaining.toFixed(1)}s`;
+    this.el.turnTimer.classList.toggle('warning', remaining <= 7 && remaining > 3);
+    this.el.turnTimer.classList.toggle('danger', remaining <= 3);
+  }
+
+  hideTurn(){ this.el.turnbar.classList.remove('show'); }
+
+  renderPlayers(players, activeIndex){
+    this.el.playersList.innerHTML = players.map((p,i)=>`
+      <div class="player-row ${i===activeIndex?'active':''}">
+        <span><i></i>${p.name}</span><b>${i===activeIndex?'TURN':'WAITING'}</b>
+      </div>
+    `).join('');
+  }
+
   showVictory(text){ this.el.victoryText.textContent = text; this.el.victory.classList.add('show'); }
   showGameOver({moves, timeStr, best}){
     this.el.goMoves.textContent = moves;
@@ -938,6 +1049,18 @@ class Game{
     this.frameCount = 0;
     this.lastCollisionSoundT = 0;
 
+    // Local 2-player pass-and-play.
+    this.players = [
+      {id:'p1', name:'Player 1'},
+      {id:'p2', name:'Player 2'}
+    ];
+    this.currentPlayerIndex = 0;
+    this.turnTimeLimit = 15;
+    this.turnRemaining = this.turnTimeLimit;
+    this.turnTimerRunning = false;
+    this.gameStarted = false;
+    this.blockControlEnabled = true;
+
     // explicit drag-vs-camera state (see _bindInput/_onPointerDown etc.)
     this.isDraggingBlock = false;
     this.activePointerId = null;
@@ -962,10 +1085,14 @@ class Game{
       onCameraReset: ()=> this.camCtrl.resetView(),
       onMuteToggle: (m)=>{ this.sound.setMuted(m); },
       onGridSelect: (id)=> this._selectById(id),
+      onPlay: ()=> this.startGame(),
+      onForfeit: ()=> this.forfeitCurrentPlayer(),
     });
     this.ui.setBanner('Ready','ok');
     this.ui.updateGameInfo({moves:0,timeStr:'00:00',remaining:TOTAL_BLOCKS,total:TOTAL_BLOCKS,statusLabel:'READY'});
     this.ui.refreshGrid(this.tower.blocks);
+    this.ui.showStart(true);
+    this.ui.renderPlayers(this.players, this.currentPlayerIndex);
 
     this._bindInput();
     window.addEventListener('resize', ()=> this._onResize());
@@ -1124,6 +1251,54 @@ class Game{
     }
   }
 
+
+  /* ------------------------ local 2-player game ------------------------ */
+  startGame(){
+    this.sound.ensure();
+    this.gameStarted = true;
+    this.status = 'PLAYING';
+    this.timerRunning = true;
+    this.startTime = performance.now();
+    this.elapsed = 0;
+    this.currentPlayerIndex = 0;
+    this.blockControlEnabled = true;
+    this.ui.showStart(false);
+    this._setPlayerTurn(0);
+  }
+
+  _setPlayerTurn(index){
+    if(this.status==='GAME_OVER' || this.status==='COLLAPSING') return;
+    this.currentPlayerIndex = index % this.players.length;
+    this.turnRemaining = this.turnTimeLimit;
+    this.turnTimerRunning = true;
+    const player = this.players[this.currentPlayerIndex];
+    this.blockControlEnabled = true;
+    this.ui.renderPlayers(this.players, this.currentPlayerIndex);
+    this.ui.showTurn(player.name, this.turnRemaining);
+    this.ui.setBanner(`${player.name}'s Turn`, 'ok');
+  }
+
+  _nextPlayer(){
+    if(this.status==='GAME_OVER' || this.status==='COLLAPSING') return;
+    this._setPlayerTurn((this.currentPlayerIndex + 1) % this.players.length);
+  }
+
+  _turnExpired(){
+    if(!this.turnTimerRunning) return;
+    this.turnTimerRunning = false;
+    const player = this.players[this.currentPlayerIndex];
+    this.ui.setBanner(`${player.name} ran out of time`, 'warning');
+    setTimeout(()=>{
+      if(this.status!=='GAME_OVER' && this.status!=='COLLAPSING') this._nextPlayer();
+    }, 500);
+  }
+
+  forfeitCurrentPlayer(){
+    if(!this.gameStarted || this.status==='GAME_OVER' || this.status==='COLLAPSING') return;
+    const player = this.players[this.currentPlayerIndex];
+    this._enterGameOver('FORFEIT', player.name);
+  }
+
   /* ------------------------------ input ------------------------------ */
   _bindInput(){
     const dom = this.renderer.domElement;
@@ -1153,6 +1328,7 @@ class Game{
     if(e.button===2) return; // right button reserved for pan — never touched by block logic
     if(e.button!==0) return; // only primary button can pick/drag a block
     if(this.status==='GAME_OVER' || this.status==='COLLAPSING') return;
+    if(!this.gameStarted || !this.blockControlEnabled) return;
 
     const block = this._pickBlock(e);
     if(block && this.blockControlEnabled){
@@ -1309,6 +1485,12 @@ class Game{
       this.ui.showVictory(`${WIN_TARGET} blocks removed without a collapse!`);
       this.status = 'PLAYING';
     }
+
+    // The move is complete: hand the laptop to the other player.
+    if(this.gameStarted && this.status!=='COLLAPSING' && this.status!=='GAME_OVER'){
+      this.turnTimerRunning = false;
+      setTimeout(()=>this._nextPlayer(), 700);
+    }
   }
 
   setDifficulty(d){
@@ -1330,6 +1512,11 @@ class Game{
     this._collisionSetup();
 
     this.status = 'START';
+    this.gameStarted = false;
+    this.turnTimerRunning = false;
+    this.turnRemaining = this.turnTimeLimit;
+    this.currentPlayerIndex = 0;
+    this.blockControlEnabled = true;
     this.moves = 0;
     this.elapsed = 0;
     this.startTime = null;
@@ -1347,6 +1534,9 @@ class Game{
     this.sound.stopRumble(); this.sound.stopScrape();
     this.ui.hideGameOver();
     this.ui.hideBlockInfo();
+    this.ui.hideTurn();
+    this.ui.showStart(true);
+    this.ui.renderPlayers(this.players, this.currentPlayerIndex);
     this.ui.pushHistory([]);
     this.ui.refreshGrid(this.tower.blocks);
     this.ui.setBanner('Ready','ok');
@@ -1402,6 +1592,12 @@ class Game{
     // timer
     if(this.timerRunning){
       this.elapsed = performance.now() - this.startTime;
+    }
+
+    if(this.turnTimerRunning && this.gameStarted && this.status!=='GAME_OVER' && this.status!=='COLLAPSING'){
+      this.turnRemaining = Math.max(0, this.turnRemaining - dt);
+      this.ui.showTurn(this.players[this.currentPlayerIndex].name, this.turnRemaining);
+      if(this.turnRemaining <= 0) this._turnExpired();
     }
 
     // stability evaluation (every few frames for perf)
@@ -1487,11 +1683,20 @@ class Game{
     }
   }
 
-  _enterGameOver(){
+  _enterGameOver(reason='COLLAPSED', forfeitingPlayer=null){
     this.status = 'GAME_OVER';
     this.timerRunning = false;
-    this.ui.setBanner('Tower Collapsed','danger');
+    this.turnTimerRunning = false;
+    const lostByForfeit = reason === 'FORFEIT';
+    this.ui.setBanner(lostByForfeit ? 'GAME LOST' : 'Tower Collapsed','danger');
     if(this.bestMoves===null || this.moves > this.bestMoves) this.bestMoves = this.moves;
+    if(lostByForfeit){
+      this.ui.el.goTitle.textContent = 'GAME LOST';
+      this.ui.el.goSub.textContent = `${forfeitingPlayer || 'Current player'} forfeited.`;
+    }else{
+      this.ui.el.goTitle.textContent = 'TOWER COLLAPSED';
+      this.ui.el.goSub.textContent = 'The tower gave way.';
+    }
     this.ui.showGameOver({ moves:this.moves, timeStr:this._fmtTime(this.elapsed), best:this.bestMoves });
   }
 
