@@ -1,40 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>TABLE TOWER</title>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="YOUR_GOOGLE_FONT_LINK">
-
-    <!-- Your CSS -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>TABLE TOWER</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,680&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <div id="app">
 
-    <!-- KEEP ALL YOUR HTML HERE -->
-    <div id="app">
-        ...
+    <div id="topbar">
+      <div id="brand">
+        <h1>TABLE TOWER</h1>
+        <p>Remove blocks without collapsing the tower.</p>
+      </div>
+      <div id="topcontrols">
+        <div class="pill-group" id="difficulty-group">
+          <button class="pill" data-diff="EASY">Easy</button>
+          <button class="pill active" data-diff="NORMAL">Normal</button>
+          <button class="pill" data-diff="HARD">Hard</button>
+        </div>
+        <button class="iconbtn on" id="mutebtn" title="Mute / Unmute">🔊</button>
+        <button class="iconbtn" id="camresetbtn" title="Reset Camera">⟳<span style="font-size:9px;">cam</span></button>
+        <button id="resetbtn" title="Reset Game">↻ RESET</button>
+      </div>
     </div>
 
-    <!-- Libraries -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-            "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
-        }
-    }
-    </script>
 
-    <!-- Your JavaScript -->
-    <script type="module" src="game.js"></script>
+    <div id="startscreen">
+      <div class="start-card">
+        <div class="start-badge">LOCAL PASS &amp; PLAY</div>
+        <h2>TABLE TOWER</h2>
+        <p>Two players. One laptop. Take turns pulling one block at a time.</p>
+        <button class="game-btn" id="playbtn">▶ START GAME</button>
+      </div>
+    </div>
 
+    <div id="turnbar">
+      <span class="turn-label">NOW PLAYING</span>
+      <span id="turn-player">PLAYER 1</span>
+      <span id="turn-timer">15.0s</span>
+      <button id="forfeitbtn">LOSS</button>
+    </div>
+
+    <div id="main">
+      <aside class="panel" id="leftpanel">
+        <div class="card">
+          <h2>Pieces</h2>
+          <div id="piecesgrid"></div>
+        </div>
+        <div class="card">
+          <h2>Controls</h2>
+          <div class="legend-row"><span>Rotate</span><kbd>Left Drag</kbd></div>
+          <div class="legend-row"><span>Pan</span><kbd>Right Drag</kbd></div>
+          <div class="legend-row"><span>Zoom</span><kbd>Scroll</kbd></div>
+          <div class="legend-row"><span>Select</span><kbd>Click</kbd></div>
+          <div class="legend-row"><span>Pull Block</span><kbd>Drag Block</kbd></div>
+          <div class="legend-row"><span>Reset</span><kbd>R</kbd></div>
+        </div>
+      </aside>
+
+      <div id="viewport">
+        <div id="canvas-host"></div>
+
+        <div id="statebanner"><span class="dot"></span><span id="statebanner-text">Ready</span></div>
+
+        <div id="blockinfo">
+          <h3 id="bi-title">BLOCK #—</h3>
+          <div class="row"><span class="k">Level</span><span class="v" id="bi-level">—</span></div>
+          <div class="row"><span class="k">Mass</span><span class="v" id="bi-mass">—</span></div>
+          <div class="row"><span class="k">State</span><span class="v" id="bi-state">—</span></div>
+        </div>
+
+        <div id="victory">
+          <h3>🏆 YOU WIN</h3>
+          <p id="victory-text">15 blocks removed without collapse!</p>
+          <button id="victory-close">Keep Playing</button>
+        </div>
+
+        <div id="mobiletoggles">
+          <button id="toggle-left">☰ Pieces</button>
+          <button id="toggle-right">Stats ☰</button>
+        </div>
+      </div>
+
+      <aside class="panel" id="rightpanel">
+        <div class="card">
+          <h2>Game Info</h2>
+          <div class="row"><span class="k">Moves</span><span class="v" id="gi-moves">0</span></div>
+          <div class="row"><span class="k">Time</span><span class="v" id="gi-time">00:00</span></div>
+          <div class="row"><span class="k">Blocks</span><span class="v" id="gi-blocks">54/54</span></div>
+          <div class="row"><span class="k">Status</span><span class="v" id="gi-status">READY</span></div>
+        </div>
+
+
+        <div class="card" id="players-card">
+          <h2>Players</h2>
+          <div id="players-list">
+            <div class="player-row active"><span><i></i> Player 1</span><b>TURN</b></div>
+            <div class="player-row"><span><i></i> Player 2</span><b>WAITING</b></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Physics</h2>
+          <div class="row"><span class="k">Center of Mass</span><span class="v" id="ph-com">Centered</span></div>
+          <div id="com-track">
+            <div id="com-support"></div>
+            <div id="com-dot"></div>
+          </div>
+          <div class="row" style="margin-top:8px;"><span class="k">Base Stability</span><span class="v"
+              id="ph-stab-num">100%</span></div>
+          <div id="gauge-wrap">
+            <div id="gauge">
+              <div id="gauge-fill"></div>
+              <div id="gauge-needle"></div>
+              <div id="gauge-pct"></div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px;"><span class="k">Tilt Angle</span><span class="v"
+              id="ph-tilt">0.0°</span></div>
+          <div class="row"><span class="k">Risk Level</span><span class="v" id="ph-risk">LOW</span></div>
+        </div>
+
+        <div class="card">
+          <h2>Move History</h2>
+          <div id="history">
+            <div class="h-empty">No moves yet</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="gameover">
+      <div class="card">
+        <div class="emoji" id="go-emoji">💥</div>
+        <h2 id="go-title">TOWER COLLAPSED</h2>
+        <p id="go-sub">The tower gave way.</p>
+        <div class="stat-row"><span>Moves made</span><span id="go-moves">0</span></div>
+        <div class="stat-row"><span>Time</span><span id="go-time">00:00</span></div>
+        <div class="stat-row"><span>Best attempt</span><span id="go-best">—</span></div>
+        <button id="go-again">↻ PLAY AGAIN</button>
+      </div>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <div>ASSEMBLING TOWER…</div>
+    </div>
+    <div id="fatal-error">
+      <h2>Unable to initialize the 3D physics engine.</h2>
+      <p>Please use a modern browser such as Chrome, Edge, Firefox, or Safari, and ensure hardware acceleration / WebGL
+        is enabled.</p>
+    </div>
+  </div>
+
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
+  }
+}
+</script>
+
+  <script type="module" src="game.js"></script>
 </body>
+
 </html>
