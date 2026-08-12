@@ -311,9 +311,9 @@ Possible future development includes:
 
 ## 👨‍💻 Team
 
-**Team:** *[Your Team Name]*
+**Team:** *CSE D*
 
-**Hackathon:** *[Hackathon Name]*
+**Hackathon:** *AFTER HOURS*
 
 **Theme:** Toys & Games
 
